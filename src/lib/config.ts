@@ -24,6 +24,12 @@ export const PLAN_CONFIG = {
   },
 } as const;
 
+export const GEMINI_VOICE_PERSONA_MAP: Record<string, string> = {
+  professional_calm: 'Kore',
+  executive_direct: 'Charon',
+  warm_hr: 'Aoede',
+};
+
 function requireEnv(name: string, fallback?: string): string {
   const value = process.env[name] ?? fallback;
   if (!value || value.trim() === '') {
@@ -41,6 +47,12 @@ export const serverConfig = {
   gemini: {
     get apiKey(): string {
       return requireEnv('GEMINI_API_KEY');
+    },
+    get liveModel(): string {
+      return requireEnv(
+        'GEMINI_LIVE_MODEL',
+        'gemini-2.5-flash-native-audio-preview-12-2025'
+      );
     },
     get voiceModel(): string {
       return requireEnv('GEMINI_VOICE_MODEL', 'gemini-2.5-flash');
