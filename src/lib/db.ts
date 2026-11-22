@@ -1,8 +1,22 @@
 import 'server-only';
-import { neon, Pool, type PoolClient } from '@neondatabase/serverless';
+import { neon, Pool, type NeonQueryFunction, type PoolClient } from '@neondatabase/serverless';
 import { serverConfig } from './config';
 
-export const sql = neon(serverConfig.database.url);
+let _sql: NeonQueryFunction<false, false> | null = null;
+
+function getSqlClient(): NeonQueryFunction<false, false> {
+  if (!_sql) {
+    _sql = neon(serverConfig.database.url);
+  }
+  return _sql;
+}
+
+export function sql(
+  strings: TemplateStringsArray,
+  ...params: unknown[]
+): Promise<Record<string, unknown>[]> {
+  return getSqlClient()(strings, ...params) as Promise<Record<string, unknown>[]>;
+}
 
 let pool: Pool | null = null;
 
