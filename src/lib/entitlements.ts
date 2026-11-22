@@ -1,5 +1,6 @@
 import 'server-only';
 import { cookies } from 'next/headers';
+import { getVerifiedAdminUserId, getVerifiedUserId } from './admin-auth';
 import { sql } from './db';
 import { PLAN_CONFIG, type PlanTier, type UserRole } from './config';
 
@@ -29,6 +30,7 @@ export type PresetScenarioKey = keyof typeof PRESET_SCENARIOS;
 export interface AuthenticatedUser {
   id: string;
   email: string;
+  fullName: string | null;
   role: UserRole;
   planTier: PlanTier;
   trialScenario: string;
@@ -55,8 +57,13 @@ export class EntitlementError extends Error {
 }
 
 export async function requireAuthenticatedUser(req?: Request): Promise<AuthenticatedUser> {
+  const signedUserId = await getVerifiedUserId();
+  const signedAdminId = signedUserId ? null : await getVerifiedAdminUserId();
   const cookieStore = await cookies();
+
   const userId =
+    signedUserId ??
+    signedAdminId ??
     cookieStore.get('kalamuji_uid')?.value ??
     req?.headers.get('x-kalamuji-user-id') ??
     null;
@@ -69,6 +76,7 @@ export async function requireAuthenticatedUser(req?: Request): Promise<Authentic
     SELECT
       id,
       email,
+      full_name,
       role,
       plan_tier,
       trial_scenario,
@@ -86,11 +94,12 @@ export async function requireAuthenticatedUser(req?: Request): Promise<Authentic
 
   const row = rows[0];
   return {
-    id: row.id as string,
-    email: row.email as string,
+    id: String(row.id),
+    email: String(row.email),
+    fullName: row.full_name ? String(row.full_name) : null,
     role: row.role as UserRole,
     planTier: row.plan_tier as PlanTier,
-    trialScenario: row.trial_scenario as string,
+    trialScenario: String(row.trial_scenario),
     remainingSessions: Number(row.remaining_sessions),
     monthlyQuota: Number(row.monthly_quota),
     cycleRenewsAt: row.cycle_renews_at ? String(row.cycle_renews_at) : null,

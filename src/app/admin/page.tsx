@@ -9,6 +9,8 @@ import {
   ThumbsUp,
   Users,
 } from 'lucide-react';
+import { LoginForm } from '@/components/auth/LoginForm';
+import { TopNav } from '@/components/ui/TopNav';
 import { getAdminDashboardMetrics, requireAdminUser } from '@/lib/admin';
 import { EntitlementError } from '@/lib/entitlements';
 
@@ -33,18 +35,8 @@ export default async function AdminDashboardPage() {
 
   if (authError || !metrics) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center py-16 text-center">
-        <div className="w-full max-w-sm rounded-2xl border border-surface-border bg-surface-card p-6 shadow-card">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-semantic-critical">
-            <ShieldCheck className="h-6 w-6" strokeWidth={1.75} />
-          </div>
-          <h1 className="mt-4 text-base font-bold text-ink-primary">
-            {authError?.status === 401 ? 'Autentikasi Diperlukan' : 'Akses Ditolak (403)'}
-          </h1>
-          <p className="mt-1.5 text-xs leading-relaxed text-ink-secondary">
-            {authError?.message ?? 'Anda tidak memiliki izin untuk membuka halaman admin.'}
-          </p>
-        </div>
+      <main className="flex flex-1 flex-col items-center justify-center py-12">
+        <LoginForm defaultTab="admin" />
       </main>
     );
   }
@@ -64,8 +56,9 @@ export default async function AdminDashboardPage() {
       : 0;
 
   return (
-    <main className="space-y-5 py-6">
-      {/* Admin Header */}
+    <main className="flex-1 space-y-5 pb-8">
+      <TopNav userEmail={adminEmail} isAdmin currentPath="admin" />
+
       <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-surface-border bg-surface-card p-4 shadow-card">
         <div>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-semibold text-brand-900">
@@ -79,7 +72,6 @@ export default async function AdminDashboardPage() {
         <p className="font-mono text-xs text-ink-muted">{adminEmail}</p>
       </header>
 
-      {/* 1. User Count & Tier Breakdown */}
       <section className="grid grid-cols-3 gap-2.5">
         <div className="rounded-2xl border border-surface-border bg-surface-card p-3.5 shadow-card">
           <div className="flex items-center gap-1.5 text-xs text-ink-muted">
@@ -112,7 +104,6 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      {/* 2. Quota Usage: 5-Session Trial vs 15-Session/Month Pro */}
       <section className="rounded-2xl border border-surface-border bg-surface-card p-4 shadow-card">
         <div className="flex items-center gap-2 text-xs font-semibold text-ink-primary">
           <Gauge className="h-4 w-4 text-brand-700" strokeWidth={1.75} />
@@ -150,7 +141,6 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      {/* 3. Scenario Breakdown & Average 4-Indicator Scores */}
       <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="rounded-2xl border border-surface-border bg-surface-card p-4 shadow-card">
           <div className="flex items-center gap-2 text-xs font-semibold text-ink-primary">
@@ -211,7 +201,6 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      {/* 4. Incoming User Product Feedback & Issue Reports */}
       <section className="rounded-2xl border border-surface-border bg-surface-card p-4 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs font-semibold text-ink-primary">

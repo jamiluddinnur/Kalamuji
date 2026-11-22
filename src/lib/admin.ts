@@ -1,4 +1,5 @@
 import 'server-only';
+import { getVerifiedAdminUserId } from './admin-auth';
 import { sql } from './db';
 import {
   EntitlementError,
@@ -8,10 +9,44 @@ import {
 
 /**
  * Strict server-side admin guard.
- * Always validates authenticated session AND role === 'admin' against Neon
+ * Validates signed HttpOnly admin cookie OR authenticated session AND role === 'admin' against Neon
  * before querying or returning any developer/admin data.
  */
 export async function requireAdminUser(req?: Request): Promise<AuthenticatedUser> {
+  const signedAdminId = await getVerifiedAdminUserId();
+  if (signedAdminId) {
+    const rows = await sql`
+      SELECT
+        id,
+        email,
+        full_name,
+        role,
+        plan_tier,
+        trial_scenario,
+        remaining_sessions,
+        monthly_quota,
+        cycle_renews_at
+      FROM users
+      WHERE id = ${signedAdminId}
+        AND role = 'admin'
+      LIMIT 1
+    `;
+    if (rows.length > 0) {
+      const row = rows[0];
+      return {
+        id: String(row.id),
+        email: String(row.email),
+        fullName: row.full_name ? String(row.full_name) : null,
+        role: 'admin',
+        planTier: row.plan_tier as AuthenticatedUser['planTier'],
+        trialScenario: String(row.trial_scenario),
+        remainingSessions: Number(row.remaining_sessions),
+        monthlyQuota: Number(row.monthly_quota),
+        cycleRenewsAt: row.cycle_renews_at ? String(row.cycle_renews_at) : null,
+      };
+    }
+  }
+
   const user = await requireAuthenticatedUser(req);
   if (user.role !== 'admin') {
     throw new EntitlementError(
@@ -72,7 +107,6 @@ export interface AdminDashboardMetrics {
 }
 
 export async function getAdminDashboardMetrics(req?: Request): Promise<AdminDashboardMetrics> {
-  // Defense-in-depth: always re-verify admin role before executing any admin SQL
   await requireAdminUser(req);
 
   const [

@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { ReportClient } from '@/components/evaluation/ReportClient';
+import { TopNav } from '@/components/ui/TopNav';
 import { sql } from '@/lib/db';
 import { EntitlementError, requireAuthenticatedUser } from '@/lib/entitlements';
 import type { SessionEvaluation } from '@/lib/types';
@@ -18,7 +19,7 @@ export default async function ReportPage({
     user = await requireAuthenticatedUser();
   } catch (error) {
     if (error instanceof EntitlementError) {
-      redirect('/dashboard');
+      redirect('/login');
     }
     throw error;
   }
@@ -75,6 +76,11 @@ export default async function ReportPage({
 
   return (
     <main className="flex-1">
+      <TopNav
+        userEmail={user.email}
+        isAdmin={user.role === 'admin'}
+        currentPath="report"
+      />
       <ReportClient evaluation={evaluation} memorySummary={memorySummary} />
     </main>
   );

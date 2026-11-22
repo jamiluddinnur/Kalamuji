@@ -1,5 +1,6 @@
-import { ShieldAlert } from 'lucide-react';
+import { redirect } from 'next/navigation';
 import { DashboardClient } from '@/components/dashboard/DashboardClient';
+import { TopNav } from '@/components/ui/TopNav';
 import { sql } from '@/lib/db';
 import { EntitlementError, requireAuthenticatedUser } from '@/lib/entitlements';
 
@@ -7,32 +8,14 @@ export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   let user = null;
-  let authMessage: string | null = null;
 
   try {
     user = await requireAuthenticatedUser();
   } catch (error) {
     if (error instanceof EntitlementError) {
-      authMessage = error.message;
-    } else {
-      throw error;
+      redirect('/login');
     }
-  }
-
-  if (!user) {
-    return (
-      <main className="flex flex-1 flex-col items-center justify-center py-16 text-center">
-        <div className="w-full max-w-sm rounded-2xl border border-surface-border bg-surface-card p-6 shadow-card">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-900">
-            <ShieldAlert className="h-6 w-6" strokeWidth={1.75} />
-          </div>
-          <h1 className="mt-4 text-base font-bold text-ink-primary">Silakan Masuk</h1>
-          <p className="mt-1.5 text-xs leading-relaxed text-ink-secondary">
-            {authMessage ?? 'Sesi pengguna diperlukan untuk mengakses ruang latihan Kalamuji.'}
-          </p>
-        </div>
-      </main>
-    );
+    throw error;
   }
 
   let memorySummary: string | null = null;
@@ -45,6 +28,11 @@ export default async function DashboardPage() {
 
   return (
     <main className="flex-1">
+      <TopNav
+        userEmail={user.email}
+        isAdmin={user.role === 'admin'}
+        currentPath="dashboard"
+      />
       <DashboardClient
         userEmail={user.email}
         planTier={user.planTier}

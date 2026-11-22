@@ -19,7 +19,19 @@
   }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @layer utilities {
+  /* 60fps.design: GPU-composited micro-interaction only (transform + opacity) */
   .tap-scale {
     @apply transition-transform duration-micro ease-out active:scale-[0.98];
   }
@@ -28,8 +40,9 @@
     @apply transition-[border-color,box-shadow] duration-ui ease-out;
   }
 
+  /* motionin.design: Use ONLY on landing/login/marketing sections, NEVER on active voice or evaluation screens */
   .section-reveal {
-    @apply transition-[opacity,transform] duration-section ease-out-smooth;
+    animation: fadeInUp 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 }
 
